@@ -1,0 +1,26 @@
+
+
+/{
+	zephyr,user {
+		io-channels = <&adc 0>, <&adc 1>;
+	};
+};
+
+
+&adc {
+	status = "okay";
+};
+
+
+&spi4 {
+	status = "disabled";
+};
+
+&qspi {
+	status = "disabled";
+};
+
+&led3 {
+	gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;
+	label = "led board alive";
+};
