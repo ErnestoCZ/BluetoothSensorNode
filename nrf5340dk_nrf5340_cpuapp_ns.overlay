@@ -2,13 +2,50 @@
 
 /{
 	zephyr,user {
-		io-channels = <&adc 0>, <&adc 1>;
+		io-channels = <&adc 0>, <&adc 1>, <&adc_emul 0>;
 	};
+	/* Create the emulator device */
+    adc_emul: adc_emul {
+        compatible = "zephyr,adc-emul";
+        nchannels = <1>;
+		#io-channel-cells = <1>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        status = "okay";
+
+        /* Define a mock channel */
+        channel@0 {
+            reg = <0>;
+            zephyr,gain = "ADC_GAIN_1";
+            zephyr,reference = "ADC_REF_INTERNAL";
+            zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+            zephyr,resolution = <12>;
+        };
+    };
 };
 
 
 &adc {
 	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@0 {
+		reg = <0>;
+		zephyr,acquisition-time = < ADC_ACQ_TIME_DEFAULT >;
+		zephyr,gain = "ADC_GAIN_1_6";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,input-positive = <NRF_SAADC_AIN0>;
+		zephyr,resolution = <12>;
+	};
+	channel@1 {
+		reg = <1>;
+		zephyr,acquisition-time = < ADC_ACQ_TIME_DEFAULT >;
+		zephyr,gain = "ADC_GAIN_1_6";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,input-positive = <NRF_SAADC_AIN0>;
+		zephyr,resolution = <12>;
+	};
 };
 
 
@@ -24,3 +61,4 @@
 	gpios = <&gpio0 31 GPIO_ACTIVE_LOW>;
 	label = "led board alive";
 };
+
