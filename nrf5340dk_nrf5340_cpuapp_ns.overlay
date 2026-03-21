@@ -1,0 +1,48 @@
+// To get started, press Ctrl+Space to bring up the completion menu and view the available nodes.
+
+// You can also use the buttons in the sidebar to perform actions on nodes.
+// Actions currently available include:
+
+// * Enabling / disabling the node
+// * Adding the bus to a bus
+// * Removing the node
+// * Connecting ADC channels
+
+// For more help, browse the DeviceTree documentation at https://docs.zephyrproject.org/latest/guides/dts/index.html
+// You can also visit the nRF DeviceTree extension documentation at https://docs.nordicsemi.com/bundle/nrf-connect-vscode/page/guides/ncs_configure_app.html#devicetree-support-in-the-extension
+
+/{
+    zephyr,user {
+        board-name = "nrf5340Playground";
+        io-channels = <&adc 0>;
+    };
+        
+};
+    
+&adc {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    channel@0 {
+        reg = <0>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <0>;
+        zephyr,resolution = <12>;
+        zephyr,input-positive = <NRF_SAADC_AIN0>;
+    };
+};
+
+&i2c1 {
+    status = "disabled";
+};
+
+&spi4 {
+    status = "disabled";
+};
+
+
+&qspi {
+    status = "disabled";
+};
