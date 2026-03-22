@@ -60,9 +60,14 @@
     gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
 };
 &button0 {
-    label = "start_stop_advertisements_button";
+    label = "start_adv_button";
     gpios = <&gpio0 23 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 };
+&button1 {
+    label = "stop_adv_button";
+    gpios = <&gpio0 24 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+};
+
 
 
 
