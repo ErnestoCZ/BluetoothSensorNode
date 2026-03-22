@@ -18,6 +18,7 @@ LOG_INF("App started...");
     }else{
         _init_gap();
     }
+    _init_gpios();
 
         return 0;
 }

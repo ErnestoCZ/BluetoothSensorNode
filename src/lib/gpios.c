@@ -2,6 +2,7 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
+#include "gap.h"
 
 LOG_MODULE_REGISTER(GPIOS);
 
@@ -48,6 +49,7 @@ void button_start_stop_adv_handler(const struct device *port,
 					gpio_port_pins_t pins){
                         //TODO push adv start/stop work to queue
                         LOG_INF("Button clicked");
+                        k_work_submit(&work_toggle_adv);
                     };
 
 static void _init_BUTTONS(void){
