@@ -2,6 +2,7 @@
 #include <zephyr/logging/log.h>
 #include "lib/gatt_ess.h"
 #include "lib/gap.h"
+#include "lib/gpios.h"
 
 LOG_MODULE_REGISTER(main);
 
