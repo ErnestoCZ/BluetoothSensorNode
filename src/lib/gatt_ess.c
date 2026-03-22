@@ -9,7 +9,11 @@ static const struct bt_gatt_cpf temperature_cpf = {
   .description = 0x0000 // 0x0000 (No specific desc)
 };
 
-void _init_gatt_ess(void){};
+/**
+ * @brief init for the corresponding gatt service ESS
+ * 
+ */
+void init_gatt_ess(void){};
 ssize_t bt_temp_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
@@ -39,13 +43,6 @@ BT_GATT_SERVICE_DEFINE(
         NULL,//WRITE Callback
         NULL //USERDATA
     ),
-    // BT_GATT_DESCRIPTOR(BT_UUID_GATT_CPF,
-    //     BT_GATT_PERM_READ,
-    //     bt_gatt_attr_read_cpf,
-    //     NULL,
-    //     (void*)&temp_cpf
-    // ),
-    BT_GATT_CPF(&temperature_cpf),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_HUMIDITY,
         BT_GATT_CHRC_READ,
