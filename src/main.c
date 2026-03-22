@@ -7,19 +7,33 @@
 LOG_MODULE_REGISTER(main);
 
 
+static void checkInitStatus(int error, const char* message){
+    // const char prefix[] = (error == 0) ? "Success": "Failed"; 
+    if(!error){
+        LOG_INF("Success (code %d) init :  %s",error,message);
+    }else{
+        LOG_ERR("Failure (code %d) init :  %s",error,message);
+    }
+}
 
 int main(void)
 {
 LOG_INF("App started...");
-    _init_gatt_ess();
     int ret;
     ret = bt_enable(NULL);
-    if(ret < 0){
-        LOG_ERR("Failed to enable bluetooth");
-    }else{
-        _init_gap();
-    }
-    _init_gpios();
+    checkInitStatus(ret,"bt_enable()");
+    if(ret) return -1;
 
-        return 0;
+    ret = init_gap();
+    checkInitStatus(ret,"init_gap()");
+    if(ret) return -1;
+    
+    init_gatt_ess();
+
+
+    ret = init_gpios();
+    checkInitStatus(ret,"init_gpios()");
+    if(ret) return -1;
+
+    return 0;
 }
