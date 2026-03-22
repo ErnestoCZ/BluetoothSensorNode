@@ -34,14 +34,25 @@
     };
 };
 
+&pinctrl {
+    i2c1_default {
+        group1{
+            bias-pull-up;
+        };
+    };
+};
+
 &i2c1 {
-    status = "okay";
+    status = "disabled";
+    pinctrl-0 = <&i2c1_default>;
+    pinctrl-1 = <&i2c1_sleep>;
+    pinctrl-names = "default", "sleep";
+    clock-frequency = <250000>;
     bme280@77 {
         compatible = "bosch,bme280";
         reg = <0x77>;
     };
 
-    clock-frequency = <250000>;
 };
 
 &spi4 {
