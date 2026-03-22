@@ -28,14 +28,11 @@ const struct bt_data sd[] = {
         BT_DATA_BYTES(BT_DATA_UUID16_SOME, BT_UUID_16_ENCODE(BT_UUID_ESS_VAL))
 };
 
-static struct bt_conn* _conn;
-
 struct bt_conn_cb conn_cb = {
         .connected = connected_cb,
         .disconnected = disconnected_cb,
         .recycled = recycled_cb
 };
-static bool should_advertise = false;
 //GAP CALLBACK IMPLEMENTATIONS
 void connected_cb(struct bt_conn *conn, uint8_t err){
         switch (err)
