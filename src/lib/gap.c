@@ -60,11 +60,19 @@ void recycled_cb(void){
 };
 
 void start_adv_work_handler(struct k_work *work){
-        bt_le_adv_start(adv_param,ad,ARRAY_SIZE(ad),sd, ARRAY_SIZE(sd));
+        int ret = bt_le_adv_start(adv_param,ad,ARRAY_SIZE(ad),sd, ARRAY_SIZE(sd));
+        if(!ret) {
+                //TODO turn on corresponding led
+        }
 }
 void stop_adv_work_handler(struct k_work *work){
-                bt_le_adv_stop();
+        int ret = bt_le_adv_stop();
+        if(!ret){
+                //TODO turn off corresponding led
+        }
 }
+void start_adv(void){k_work_submit(&start_adv_work);}
+void stop_adv(void){k_work_submit(&stop_adv_work);}
 
 
 int init_gap(void){
