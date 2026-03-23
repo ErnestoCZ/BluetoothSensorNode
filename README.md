@@ -25,8 +25,8 @@ Die Pin-Belegung wird über ein Devicetree-Overlay (`.overlay`) definiert. Stand
 | :--- | :--- |
 | **VCC** | 3.3V |
 | **GND** | GND |
-| **SCL** | P1.03 (SCL) |
-| **SDA** | P1.02 (SDA) |
+| **SCL** | P1.04 (SCL) |
+| **SDA** | P1.05 (SDA) |
 
 ## 🚀 Installation & Build
 
