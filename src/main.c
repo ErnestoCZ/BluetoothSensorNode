@@ -3,8 +3,9 @@
 #include "lib/gatt_ess.h"
 #include "lib/gap.h"
 #include "lib/gpios.h"
+#include "lib/bme280_mod.h"
 
-LOG_MODULE_REGISTER(main);
+LOG_MODULE_REGISTER(MAIN);
 
 
 static void checkInitStatus(int error, const char* message){
@@ -33,6 +34,10 @@ LOG_INF("App started...");
 
     ret = init_gpios();
     checkInitStatus(ret,"init_gpios()");
+    if(ret) return -1;
+    
+    ret = bme280_mod_init();
+    checkInitStatus(ret,"bme280_mod_init()");
     if(ret) return -1;
 
     return 0;
