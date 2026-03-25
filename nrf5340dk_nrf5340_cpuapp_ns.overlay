@@ -16,6 +16,10 @@
         board-name = "nrf5340Playground";
         io-channels = <&adc 0>;
     };
+    aliases {
+        env-sensor = &bme280_sensor;
+        oled-display = &ssd1306_display;
+    };
         
 };
     
@@ -39,13 +43,25 @@
     pinctrl-0 = <&i2c2_default>;
     pinctrl-1 = <&i2c2_sleep>;
     pinctrl-names = "default", "sleep";
-    bme280@77 {
+    bme280_sensor: bme280@77 {
         compatible = "bosch,bme280";
         reg = <0x77>;
         status = "okay";
+        friendly-name = "BME280";
     };
 
     clock-frequency = <I2C_BITRATE_STANDARD>;
+    ssd1306_display: ssd1306fb@3c {
+        compatible = "solomon,ssd1306fb";
+        reg = <0x3c>;
+        height = <32>;
+        width = <128>;
+        segment-offset = <0>;
+        page-offset = <0>;
+        display-offset = <0>;
+        multiplex-ratio = <63>;
+        prechargep = <0x22>;
+    };
 };
 &led0 {
     label = "board_status_led";
