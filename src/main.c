@@ -39,6 +39,8 @@ LOG_INF("App started...");
     ret = bme280_mod_init();
     checkInitStatus(ret,"bme280_mod_init()");
     if(ret) return -1;
+    
+    bme280_mod_start();
 
     return 0;
 }
