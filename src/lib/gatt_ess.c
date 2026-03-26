@@ -1,6 +1,6 @@
 #include "gatt_ess.h"
-
-static const int16_t fake_temp = 2000;
+#include "bme280_mod.h"
+static const int16_t fake_temp = UINT16_MAX;
 static const struct bt_gatt_cpf temperature_cpf = {
   .format = 0x0E,       // 0x0E = signed 16-bit integer (sint16)
   .exponent = -2,        // Value * 10^-2 (e.g., 2550 becomes 25.50)
@@ -18,7 +18,12 @@ ssize_t bt_temp_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
-                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&fake_temp,sizeof(uint16_t));
+                            struct bme280_values data;
+                            static int16_t ble_temp;
+                            ble_temp = (bme280_get_latest_data(&data) == 0) ?
+                                        (uint16_t)(data.temperature * 100) :
+                                        fake_temp;
+                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_temp,sizeof(ble_temp));
                         };
 ssize_t bt_humidity_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
