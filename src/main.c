@@ -4,7 +4,8 @@
 #include "lib/gap.h"
 #include "lib/gpios.h"
 #include "lib/bme280_mod.h"
-
+#include <zephyr/drivers/display.h>
+#include <lvgl.h>
 LOG_MODULE_REGISTER(MAIN);
 
 
@@ -16,6 +17,9 @@ static void checkInitStatus(int error, const char* message){
         LOG_ERR("Failure (code %d) init :  %s",error,message);
     }
 }
+#define OLED_NODE DT_ALIAS(oled_display)
+
+static const struct device* oled = DEVICE_DT_GET_OR_NULL(OLED_NODE);
 
 int main(void)
 {
@@ -41,6 +45,20 @@ LOG_INF("App started...");
     if(ret) return -1;
     
     bme280_mod_start();
+    const struct device *display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+
+    if (!device_is_ready(display_dev)) {
+        return 0;
+    }
+
+    display_clear(display_dev);
+    // Create a simple label
+    lv_obj_t *hello_label = lv_label_create(lv_scr_act());
+    lv_label_set_text(hello_label, "Hello nRF!");
+    lv_obj_align(hello_label, LV_ALIGN_CENTER, 0, 0);
+
+    // Turn on the display (it starts blanked by default)
+    display_blanking_off(display_dev);
 
     return 0;
 }

@@ -16,6 +16,9 @@
         board-name = "nrf5340Playground";
         io-channels = <&adc 0>;
     };
+    chosen{
+        zephyr,display = &ssd1306_display;
+    };
     aliases {
         env-sensor = &bme280_sensor;
         oled-display = &ssd1306_display;
