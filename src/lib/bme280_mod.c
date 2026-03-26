@@ -10,6 +10,7 @@ LOG_MODULE_REGISTER(BME280_MOD);
 #define PRIORITY 7
 #define STACK_SIZE 1024
 #define WORK_DELAY K_SECONDS(30)
+#define MUTEX_TIMEOUT K_FOREVER
 #define BME280_NODE DT_ALIAS(env_sensor) 
 const struct device* bme280_dev = DEVICE_DT_GET_OR_NULL(BME280_NODE);
 static struct k_work_q bme_work_queue;
@@ -19,23 +20,23 @@ static struct bme280_values bme280_data = {};
 K_MUTEX_DEFINE(bme_mutex);
 K_THREAD_STACK_DEFINE(stack, STACK_SIZE);
 void bme280_work_handler(struct k_work* work){
+    static struct sensor_value temp, pres, hum;
     int rc = sensor_sample_fetch(bme280_dev);
     if(rc != 0) {
         LOG_ERR("Failed to execute sensor_sample_fetch()");
-        return;
+        goto reschedule;
     }
-    struct sensor_value temp;
     sensor_channel_get(bme280_dev, SENSOR_CHAN_AMBIENT_TEMP, &temp);
-    struct sensor_value pres;
     sensor_channel_get(bme280_dev, SENSOR_CHAN_PRESS, &pres);
-    struct sensor_value hum;
     sensor_channel_get(bme280_dev, SENSOR_CHAN_HUMIDITY, &hum);
     
+    k_mutex_lock(&bme_mutex, MUTEX_TIMEOUT);
     bme280_data.temperature = sensor_value_to_double(&temp);
     bme280_data.pressure = sensor_value_to_double(&pres);
     bme280_data.humidity = sensor_value_to_double(&hum);
+    k_mutex_unlock(&bme_mutex);
     // LOG_DBG("New BME280 values : %d Celsius | %d kPa | %d ",temp.val1,pres.val1,hum.val1);
-    
+reschedule:    
     k_work_reschedule_for_queue(&bme_work_queue,&bme_work_del, WORK_DELAY);
     
 };
@@ -47,7 +48,7 @@ int bme280_mod_init(void){
         return -ENODEV;
     }
     if(!device_is_ready(bme280_dev)){
-        return device_is_ready(bme280_dev);
+        return -ENODEV;
     }
     k_work_queue_init(&bme_work_queue);
     k_work_queue_start(&bme_work_queue,stack,K_THREAD_STACK_SIZEOF(stack),PRIORITY,NULL);
@@ -71,7 +72,7 @@ int bme280_get_latest_data(struct bme280_values *dest){
     if(dest == NULL){
         return -EINVAL;
     }
-    k_mutex_lock(&bme_mutex,K_SECONDS(1));
+    k_mutex_lock(&bme_mutex,MUTEX_TIMEOUT);
     *dest = bme280_data;
     k_mutex_unlock(&bme_mutex);
     return 0;
