@@ -17,7 +17,7 @@ static struct k_work_delayable bme_work_del;
 
 
 K_THREAD_STACK_DEFINE(stack, STACK_SIZE);
-void sensor_work_handler(void){
+void bme280_work_handler(struct k_work* work){
     int rc = sensor_sample_fetch(bme280_dev);
     if(rc != 0) {
         LOG_ERR("Failed to execute sensor_sample_fetch()");
@@ -48,7 +48,7 @@ int bme280_mod_init(void){
     k_work_queue_init(&bme_work_queue);
     k_work_queue_start(&bme_work_queue,stack,K_THREAD_STACK_SIZEOF(stack),PRIORITY,NULL);
     k_thread_name_set(&bme_work_queue.thread,"bme280_wq");
-    k_work_init_delayable(&bme_work_del,sensor_work_handler);
+    k_work_init_delayable(&bme_work_del,bme280_work_handler);
     
     LOG_INF("BME280 Module Initialized");
     
