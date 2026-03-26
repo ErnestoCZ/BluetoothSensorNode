@@ -14,8 +14,9 @@ LOG_MODULE_REGISTER(BME280_MOD);
 const struct device* bme280_dev = DEVICE_DT_GET_OR_NULL(BME280_NODE);
 static struct k_work_q bme_work_queue;
 static struct k_work_delayable bme_work_del;
+static struct bme280_values bme280_data = {};
 
-
+K_MUTEX_DEFINE(bme_mutex);
 K_THREAD_STACK_DEFINE(stack, STACK_SIZE);
 void bme280_work_handler(struct k_work* work){
     int rc = sensor_sample_fetch(bme280_dev);
@@ -30,7 +31,10 @@ void bme280_work_handler(struct k_work* work){
     struct sensor_value hum;
     sensor_channel_get(bme280_dev, SENSOR_CHAN_HUMIDITY, &hum);
     
-    LOG_DBG("New BME280 values : %d Celsius | %d kPa | %d ",temp,pres,hum);
+    bme280_data.temperature = sensor_value_to_double(&temp);
+    bme280_data.pressure = sensor_value_to_double(&pres);
+    bme280_data.humidity = sensor_value_to_double(&hum);
+    // LOG_DBG("New BME280 values : %d Celsius | %d kPa | %d ",temp.val1,pres.val1,hum.val1);
     
     k_work_reschedule_for_queue(&bme_work_queue,&bme_work_del, WORK_DELAY);
     
@@ -62,5 +66,14 @@ void bme280_mod_start(void){
 void bme280_mod_stop(void){
     LOG_DBG("Stopping BME280 Measurement...");
     k_work_cancel_delayable(&bme_work_del);
+};
+
+int bme280_get_latest_data(struct bme280_values *dest){
+    if(dest == NULL){
+        return -EINVAL;
+    }
+    k_mutex_lock(&bme_mutex,K_SECONDS(1));
+    *dest = bme280_data;
+    k_mutex_unlock(&bme_mutex);
     return 0;
 };
