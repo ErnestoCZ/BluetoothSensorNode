@@ -8,7 +8,7 @@
 LOG_MODULE_REGISTER(BME280_MOD);
 
 #define PRIORITY 7
-#define STACK_SIZE 256
+#define STACK_SIZE 1024
 #define WORK_DELAY K_SECONDS(30)
 #define BME280_NODE DT_ALIAS(env_sensor) 
 const struct device* bme280_dev = DEVICE_DT_GET_OR_NULL(BME280_NODE);
