@@ -61,7 +61,6 @@ int bme280_mod_init(void){
 void bme280_mod_start(void){
     LOG_DBG("Starting BME280 Measurement...");
     k_work_reschedule_for_queue(&bme_work_queue,&bme_work_del,K_NO_WAIT);
-    return 0;
 };
 void bme280_mod_stop(void){
     LOG_DBG("Stopping BME280 Measurement...");
