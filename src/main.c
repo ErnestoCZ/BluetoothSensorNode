@@ -51,14 +51,17 @@ LOG_INF("App started...");
         return 0;
     }
 
-    display_clear(display_dev);
-    // Create a simple label
+    ret = display_clear(display_dev);
+    if(!ret){
+        LOG_ERR("Failed to clear display");
+    }
+    
     lv_obj_t *hello_label = lv_label_create(lv_scr_act());
     lv_label_set_text(hello_label, "Hello nRF!");
     lv_obj_align(hello_label, LV_ALIGN_CENTER, 0, 0);
-
-    // Turn on the display (it starts blanked by default)
     display_blanking_off(display_dev);
+    
+    lv_task_handler();
 
     return 0;
 }

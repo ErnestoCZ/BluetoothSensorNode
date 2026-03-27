@@ -46,6 +46,7 @@
     pinctrl-0 = <&i2c2_default>;
     pinctrl-1 = <&i2c2_sleep>;
     pinctrl-names = "default", "sleep";
+    zephyr,concat-buf-size = <256>;
     bme280_sensor: bme280@77 {
         compatible = "bosch,bme280";
         reg = <0x77>;
@@ -64,7 +65,10 @@
         display-offset = <0>;
         multiplex-ratio = <31>;
         com-sequential;
+        com-invdir;
+        segment-remap;
         prechargep = <0x22>;
+        reset-gpios = <&gpio0 18 GPIO_ACTIVE_LOW>;
     };
 };
 &led0 {
