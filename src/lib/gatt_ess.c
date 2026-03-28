@@ -1,13 +1,6 @@
 #include "gatt_ess.h"
 #include "bme280_mod.h"
 static const int16_t fake_temp = UINT16_MAX;
-static const struct bt_gatt_cpf temperature_cpf = {
-  .format = 0x0E,       // 0x0E = signed 16-bit integer (sint16)
-  .exponent = -2,        // Value * 10^-2 (e.g., 2550 becomes 25.50)
-  .unit = 0x272F,       // 0x272F = UUID for Celsius
-  .name_space = 0x01,   // 0x01 (Bluetooth SIG)
-  .description = 0x0000 // 0x0000 (No specific desc)
-};
 
 /**
  * @brief init for the corresponding gatt service ESS
