@@ -21,12 +21,12 @@ Der Knoten verwendet den standardisierten **Environmental Sensing Service (ESS)*
 ## 🔌 Hardware-Anschluss (I2C)
 Die Pin-Belegung wird über ein Devicetree-Overlay (`.overlay`) definiert. Standardbeispiel für nRF5340:
 
-| BME280 Pin | nRF5340 Pin |
-| :--- | :--- |
-| **VCC** | 3.3V |
-| **GND** | GND |
-| **SCL** | P1.04 (SCL) |
-| **SDA** | P1.05 (SDA) |
+| BME280 (0x77) Pin | nRF5340 Pin | Qwiic Leitungen (Farbe)
+| :--- | :--- | :--- |
+| **VCC** | 3.3V | Rot |
+| **GND** | GND | Schwarz |
+| **SCL** | P1.04 (SCL) | Gelb |
+| **SDA** | P1.05 (SDA) | Blau |
 
 ## 🚀 Installation & Build
 
