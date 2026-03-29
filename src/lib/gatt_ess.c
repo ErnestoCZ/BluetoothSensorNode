@@ -1,7 +1,11 @@
 #include "gatt_ess.h"
 #include "bme280_mod.h"
+#include <zephyr/logging/log.h>
 static const int16_t fake_temp = UINT16_MAX;
+static const uint16_t fake_humidity = UINT16_MAX;
+static const uint16_t fake_pressure = UINT32_MAX;
 
+LOG_MODULE_REGISTER(GATT_ESS);
 /**
  * @brief init for the corresponding gatt service ESS
  * 
@@ -18,17 +22,27 @@ ssize_t bt_temp_read_callback(struct bt_conn *conn,
                                         fake_temp;
                             return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_temp,sizeof(ble_temp));
                         };
-ssize_t bt_humidity_read_callback(struct bt_conn *conn,
+static ssize_t bt_humidity_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
-                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&fake_temp,sizeof(uint16_t));
+                            struct bme280_values data;
+                            static uint16_t ble_humidity;
+                            ble_humidity = (bme280_get_latest_data(&data) == 0) ? 
+                                            (uint16_t)(data.humidity * 100) :
+                                            fake_humidity;
+                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_humidity,sizeof(ble_humidity));
                         };
-ssize_t bt_pressure_read_callback(struct bt_conn *conn,
+static ssize_t bt_pressure_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
-                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&fake_temp,sizeof(uint16_t));
+                            struct bme280_values data;
+                            static uint32_t ble_pressure;
+                            ble_pressure = (bme280_get_latest_data(&data) == 0) ?
+                                            (uint32_t)(data.pressure * 1000) :
+                                            fake_pressure;
+                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_pressure,sizeof(ble_pressure));
                         };
 BT_GATT_SERVICE_DEFINE(
     ess_service1,
