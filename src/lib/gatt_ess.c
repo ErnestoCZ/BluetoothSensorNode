@@ -100,7 +100,7 @@ BT_GATT_SERVICE_DEFINE(
         NULL
     ),
     BT_GATT_CCC(ess_pressure_ccc_cfg_changed,
-        BT_GATT_PERM_READ | BT_GATT_PERM_READ),
+        BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
 );
 void ess_notify_temperature(void){
     if(temperature_ccc_notify){
