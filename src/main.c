@@ -1,4 +1,5 @@
 #include <zephyr/kernel.h>
+#include "main.h"
 #include <zephyr/logging/log.h>
 #include "lib/gatt_ess.h"
 #include "lib/gap.h"
@@ -31,7 +32,6 @@ LOG_INF("App started...");
     
     init_gatt_ess();
 
-
     ret = init_gpios();
     checkInitStatus(ret,"init_gpios()");
     if(ret) return -1;
@@ -41,6 +41,7 @@ LOG_INF("App started...");
     if(ret) return -1;
     
     bme280_mod_start();
+    k_thread_start(sensor_data_process_thread);
 
     return 0;
 }
