@@ -3,19 +3,43 @@
 #include <zephyr/logging/log.h>
 static const int16_t fake_temp = UINT16_MAX;
 static const uint16_t fake_humidity = UINT16_MAX;
-static const uint16_t fake_pressure = UINT32_MAX;
+static const uint32_t fake_pressure = UINT32_MAX;
+static bool temperature_ccc_notify = false;
+static bool humidity_ccc_notify = false;
+static bool pressure_ccc_notify = false;
+
+static void ess_notify_temperature(void);
+static void ess_notify_humidity(void);
+static void ess_notify_pressure(void);
+static void ess_notify_work_handler(struct k_work* work){
+    ess_notify_temperature();
+    ess_notify_humidity();
+    ess_notify_pressure();
+};
+K_WORK_DEFINE(ess_notify_work,ess_notify_work_handler);
 
 LOG_MODULE_REGISTER(GATT_ESS);
 /**
  * @brief init for the corresponding gatt service ESS
  * 
  */
-void init_gatt_ess(void){};
-ssize_t bt_temp_read_callback(struct bt_conn *conn,
+static void ess_temperature_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value){
+    temperature_ccc_notify = (value == BT_GATT_CCC_NOTIFY) ? true : false;
+    LOG_DBG("ESS_TEMPERATURE_CCC_CHANGED : %d ", value);
+};
+static void ess_humidity_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value){
+    humidity_ccc_notify = (value == BT_GATT_CCC_NOTIFY) ? true : false;
+    LOG_DBG("ESS_HUMIDITY_CCC_CHANGED");
+};
+static void ess_pressure_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value){
+    pressure_ccc_notify = (value == BT_GATT_CCC_NOTIFY) ? true : false;
+    LOG_DBG("ESS_PRESSURE_CCC_CHANGED");
+};
+static ssize_t bt_temp_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
-                            struct bme280_values data;
+                            struct bme280_values_t data;
                             static int16_t ble_temp;
                             ble_temp = (bme280_get_latest_data(&data) == 0) ?
                                         (uint16_t)(data.temperature * 100) :
@@ -26,7 +50,7 @@ static ssize_t bt_humidity_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
-                            struct bme280_values data;
+                            struct bme280_values_t data;
                             static uint16_t ble_humidity;
                             ble_humidity = (bme280_get_latest_data(&data) == 0) ? 
                                             (uint16_t)(data.humidity * 100) :
@@ -37,7 +61,7 @@ static ssize_t bt_pressure_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
-                            struct bme280_values data;
+                            struct bme280_values_t data;
                             static uint32_t ble_pressure;
                             ble_pressure = (bme280_get_latest_data(&data) == 0) ?
                                             (uint32_t)(data.pressure * 1000) :
@@ -45,32 +69,74 @@ static ssize_t bt_pressure_read_callback(struct bt_conn *conn,
                             return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_pressure,sizeof(ble_pressure));
                         };
 BT_GATT_SERVICE_DEFINE(
-    ess_service1,
+    ess_service,
     BT_GATT_PRIMARY_SERVICE(BT_UUID_ESS),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_TEMPERATURE, 
-        BT_GATT_CHRC_READ,
+        BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
         BT_GATT_PERM_READ,
         bt_temp_read_callback,//READ Callback
         NULL,//WRITE Callback
         NULL //USERDATA
     ),
+    BT_GATT_CCC(ess_temperature_ccc_cfg_changed,
+        BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_HUMIDITY,
-        BT_GATT_CHRC_READ,
+        BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
         BT_GATT_PERM_READ,
         bt_humidity_read_callback,
         NULL,
         NULL
     ),
-    //BT_GATT_CPF(&humidity_cpf)
+    BT_GATT_CCC(ess_humidity_ccc_cfg_changed,
+        BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
     BT_GATT_CHARACTERISTIC(
         BT_UUID_PRESSURE,
-        BT_GATT_CHRC_READ,
+        BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
         BT_GATT_PERM_READ,
         bt_pressure_read_callback,
         NULL,
         NULL
-    )
-    //BT_GATT_CPF(&pressure_cpf)
+    ),
+    BT_GATT_CCC(ess_pressure_ccc_cfg_changed,
+        BT_GATT_PERM_READ | BT_GATT_PERM_READ),
 );
+void ess_notify_temperature(void){
+    if(temperature_ccc_notify){
+        struct bme280_values_t data;
+        if(bme280_get_latest_data(&data) == 0){
+            uint16_t ble_temp = (bme280_get_latest_data(&data) == 0) ?
+                                (uint16_t)(data.temperature * 100) :
+                                fake_temp;
+            bt_gatt_notify(NULL,&ess_service.attrs[2],(uint16_t*)&ble_temp, sizeof(uint16_t));
+        }
+    }
+};
+void ess_notify_humidity(void){
+    if(humidity_ccc_notify){
+        struct bme280_values_t data;
+        if(bme280_get_latest_data(&data) == 0){
+            uint16_t ble_humidity = (bme280_get_latest_data(&data) == 0) ?
+                                (uint16_t)(data.humidity * 100) :
+                                fake_humidity;
+            bt_gatt_notify(NULL,&ess_service.attrs[4],(uint16_t*)&ble_humidity, sizeof(uint16_t));
+        }
+    }
+};
+void ess_notify_pressure(void){
+    if(pressure_ccc_notify){
+        struct bme280_values_t data;
+        if(bme280_get_latest_data(&data) == 0){
+            uint32_t ble_pressure = (bme280_get_latest_data(&data) == 0) ?
+                                (uint32_t)(data.pressure * 1000) :
+                                fake_pressure;
+            bt_gatt_notify(NULL,&ess_service.attrs[6],(uint32_t*)&ble_pressure, sizeof(uint32_t));
+        }
+    }
+};
+
+void ess_notify(void){
+    k_work_submit(&ess_notify_work);
+}
+void init_gatt_ess(void){};
