@@ -40,11 +40,11 @@ static ssize_t bt_temp_read_callback(struct bt_conn *conn,
 					    void *buf, uint16_t len,
 					    uint16_t offset){
                             struct bme280_values_t data;
-                            static int16_t ble_temp;
-                            ble_temp = (bme280_get_latest_data(&data) == 0) ?
-                                        (uint16_t)(data.temperature * 100) :
-                                        fake_temp;
-                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_temp,sizeof(ble_temp));
+                            static int16_t ble_temperature;
+                            ble_temperature = (bme280_get_latest_data(&data) == 0) ?
+                                               (uint16_t)(data.temperature * 100) :
+                                               fake_temp;
+                            return bt_gatt_attr_read(conn,attr,buf,len,offset,&ble_temperature,sizeof(ble_temperature));
                         };
 static ssize_t bt_humidity_read_callback(struct bt_conn *conn,
 					    const struct bt_gatt_attr *attr,
@@ -106,10 +106,8 @@ void ess_notify_temperature(void){
     if(temperature_ccc_notify){
         struct bme280_values_t data;
         if(bme280_get_latest_data(&data) == 0){
-            uint16_t ble_temp = (bme280_get_latest_data(&data) == 0) ?
-                                (uint16_t)(data.temperature * 100) :
-                                fake_temp;
-            bt_gatt_notify(NULL,&ess_service.attrs[2],(uint16_t*)&ble_temp, sizeof(uint16_t));
+            uint16_t ble_temperature = (uint16_t)(data.temperature * 100);
+            bt_gatt_notify(NULL,&ess_service.attrs[2],&ble_temperature, sizeof(ble_temperature));
         }
     }
 };
@@ -117,10 +115,8 @@ void ess_notify_humidity(void){
     if(humidity_ccc_notify){
         struct bme280_values_t data;
         if(bme280_get_latest_data(&data) == 0){
-            uint16_t ble_humidity = (bme280_get_latest_data(&data) == 0) ?
-                                (uint16_t)(data.humidity * 100) :
-                                fake_humidity;
-            bt_gatt_notify(NULL,&ess_service.attrs[4],(uint16_t*)&ble_humidity, sizeof(uint16_t));
+            uint16_t ble_humidity = (uint16_t)(data.humidity * 100);
+            bt_gatt_notify(NULL,&ess_service.attrs[5],&ble_humidity, sizeof(ble_humidity));
         }
     }
 };
@@ -128,10 +124,8 @@ void ess_notify_pressure(void){
     if(pressure_ccc_notify){
         struct bme280_values_t data;
         if(bme280_get_latest_data(&data) == 0){
-            uint32_t ble_pressure = (bme280_get_latest_data(&data) == 0) ?
-                                (uint32_t)(data.pressure * 1000) :
-                                fake_pressure;
-            bt_gatt_notify(NULL,&ess_service.attrs[6],(uint32_t*)&ble_pressure, sizeof(uint32_t));
+            uint32_t ble_pressure = (uint32_t)(data.pressure * 1000);
+            bt_gatt_notify(NULL,&ess_service.attrs[8],&ble_pressure, sizeof(ble_pressure));
         }
     }
 };
@@ -139,4 +133,6 @@ void ess_notify_pressure(void){
 void ess_notify(void){
     k_work_submit(&ess_notify_work);
 }
-void init_gatt_ess(void){};
+void init_gatt_ess(void){
+    LOG_INF("ESS Service: %d attributes", ess_service.attr_count);
+};
