@@ -42,6 +42,8 @@ LOG_INF("App started...");
     
     bme280_mod_start();
     k_thread_start(sensor_data_process_thread);
+    
+    start_adv();
 
     return 0;
 }
