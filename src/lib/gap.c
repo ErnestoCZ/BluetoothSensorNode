@@ -1,4 +1,5 @@
 #include "gap.h"
+#include <zephyr/bluetooth/hci.h>
 
 LOG_MODULE_REGISTER(GAP);
 
@@ -12,7 +13,7 @@ void stop_adv(void);
 //STRUCTS
 struct k_work start_adv_work;
 struct k_work stop_adv_work;
-static struct bt_conn* _conn;
+static struct bt_conn* _conn = NULL;
 const struct bt_le_adv_param adv_param[] = 
         BT_LE_ADV_PARAM(BT_LE_ADV_OPT_SCANNABLE | BT_LE_ADV_OPT_CONN,
         BT_LE_ADV_INTERVAL_DEFAULT,
@@ -45,18 +46,32 @@ void connected_cb(struct bt_conn *conn, uint8_t err){
         }
 };
 void disconnected_cb(struct bt_conn *conn, uint8_t reason){
+        char addr[BT_ADDR_LE_STR_LEN];
+        bt_addr_le_to_str(bt_conn_get_dst(conn),addr,sizeof(addr));
         switch (reason)
         {
-                
+        case BT_HCI_ERR_CONN_TIMEOUT:
+                LOG_WRN("Connection timed out with %s.", addr);
+                break;
+        case BT_HCI_ERR_REMOTE_USER_TERM_CONN:
+                LOG_INF("The remote device closed the connection.");
+                break;
+        case BT_HCI_ERR_LOCALHOST_TERM_CONN:
+                LOG_INF("The local device closed the connection");
+                break;
+        case BT_HCI_ERR_AUTH_FAIL:
+                LOG_ERR("Pairing failed with %s", addr);
+                break;
         default:
-                bt_conn_unref(_conn);
-                        //TODO handling behavior on disconnect
+                LOG_ERR("Disconnected from %s with an unhandled HCI reason:  (%s)", addr, bt_hci_err_to_str(reason));
                 break;
         }
         
+        bt_conn_unref(_conn);
+        LOG_DBG("Connection reference realeased.");
 };
 void recycled_cb(void){
-        //TODO handling
+        start_adv();
 };
 
 void start_adv_work_handler(struct k_work *work){
