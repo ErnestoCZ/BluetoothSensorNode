@@ -1,0 +1,4 @@
+{
+    "C_Cpp.default.configurationProvider": "nordic-semiconductor.nrf-connect",
+    "C_Cpp.default.compilerPath": "/home/ernestczechowski/ncs/toolchains/927563c840/opt/zephyr-sdk/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc"
+}

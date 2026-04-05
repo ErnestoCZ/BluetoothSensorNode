@@ -86,6 +86,7 @@ void stop_adv_work_handler(struct k_work *work){
                 //TODO turn off corresponding led
         }
 }
+//TODO implementation of argument passing from k_work_submit()
 void start_adv(void){k_work_submit(&start_adv_work);}
 void stop_adv(void){k_work_submit(&stop_adv_work);}
 
