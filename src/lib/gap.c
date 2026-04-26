@@ -11,9 +11,14 @@ void start_adv(void);
 void stop_adv(void);
 
 //STRUCTS
+static struct {
+    struct bt_conn *conns[CONFIG_BT_MAX_CONN];
+    uint8_t count;
+} active_session = {0}; // Everything inside is zeroed out
 struct k_work start_adv_work;
 struct k_work stop_adv_work;
-static struct bt_conn* _conn = NULL;
+// static struct bt_conn* active_conns[CONFIG_BT_MAX_CONN] = {NULL};
+// static uint8_t active_conns_count = 0;
 const struct bt_le_adv_param adv_param[] = 
         BT_LE_ADV_PARAM(BT_LE_ADV_OPT_SCANNABLE | BT_LE_ADV_OPT_CONN,
         BT_LE_ADV_INTERVAL_DEFAULT,
@@ -36,39 +41,45 @@ struct bt_conn_cb conn_cb = {
 };
 //GAP CALLBACK IMPLEMENTATIONS
 void connected_cb(struct bt_conn *conn, uint8_t err){
-        switch (err)
-        {
-        case BT_HCI_ERR_SUCCESS:
-                _conn = bt_conn_ref(conn);
-                break;
-        default:
-                break;
+        if(err){
+                LOG_ERR("Failed to connect device with error %d (%s)", err, bt_hci_err_to_str(err));
         }
+        
+        for (int i = 0; i < CONFIG_BT_MAX_CONN; i++)
+        {
+                if(active_session.conns[i] == NULL){
+                        active_session.conns[i] = bt_conn_ref(conn);
+                        active_session.count++;
+                        LOG_INF("Connected : Saved to slot %d",i);
+                        break;
+                }
+        }
+        // if(active_session.count < CONFIG_BT_MAX_CONN){
+        //         start_adv();
+        // } else {
+        //         LOG_WRN("Max connections reached. Advertising stopped");
+        // }
 };
 void disconnected_cb(struct bt_conn *conn, uint8_t reason){
         char addr[BT_ADDR_LE_STR_LEN];
         bt_addr_le_to_str(bt_conn_get_dst(conn),addr,sizeof(addr));
-        switch (reason)
-        {
-        case BT_HCI_ERR_CONN_TIMEOUT:
-                LOG_WRN("Connection timed out with %s.", addr);
-                break;
-        case BT_HCI_ERR_REMOTE_USER_TERM_CONN:
-                LOG_INF("The remote device closed the connection.");
-                break;
-        case BT_HCI_ERR_LOCALHOST_TERM_CONN:
-                LOG_INF("The local device closed the connection");
-                break;
-        case BT_HCI_ERR_AUTH_FAIL:
-                LOG_ERR("Pairing failed with %s", addr);
-                break;
-        default:
-                LOG_ERR("Disconnected from %s with an unhandled HCI reason:  (%s)", addr, bt_hci_err_to_str(reason));
-                break;
+        if(reason){
+                LOG_ERR("Disconnected device with the ADDRESS %s for reason %s", addr, bt_hci_err_to_str(reason));
         }
-        
-        bt_conn_unref(_conn);
-        LOG_DBG("Connection reference realeased.");
+        //release from active conns
+        for (int i = 0; i < CONFIG_BT_MAX_CONN; i++)
+        {
+                if(active_session.conns[i] == conn){
+                        bt_conn_unref(active_session.conns[i]);
+                        active_session.conns[i] = NULL;
+                        active_session.count--;
+                        LOG_INF("Slot %d cleared, Reason: %s", i, bt_hci_err_to_str(reason));
+                        return;
+                }
+        }
+        // if(active_session.count < CONFIG_BT_MAX_CONN){
+        //         start_adv();
+        // }
 };
 void recycled_cb(void){
         start_adv();
