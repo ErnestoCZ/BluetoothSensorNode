@@ -17,10 +17,11 @@ static struct {
 } active_session = {0}; // Everything inside is zeroed out
 struct k_work start_adv_work;
 struct k_work stop_adv_work;
+struct k_work_delayable restart_adv_work;
 // static struct bt_conn* active_conns[CONFIG_BT_MAX_CONN] = {NULL};
 // static uint8_t active_conns_count = 0;
 const struct bt_le_adv_param adv_param[] = 
-        BT_LE_ADV_PARAM(BT_LE_ADV_OPT_SCANNABLE | BT_LE_ADV_OPT_CONN,
+        BT_LE_ADV_PARAM(BT_LE_ADV_OPT_SCANNABLE | BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_USE_IDENTITY,
         BT_LE_ADV_INTERVAL_DEFAULT,
         BT_LE_ADV_INTERVAL_DEFAULT,
         NULL);
@@ -54,11 +55,9 @@ void connected_cb(struct bt_conn *conn, uint8_t err){
                         break;
                 }
         }
-        // if(active_session.count < CONFIG_BT_MAX_CONN){
-        //         start_adv();
-        // } else {
-        //         LOG_WRN("Max connections reached. Advertising stopped");
-        // }
+        if(active_session.count < CONFIG_BT_MAX_CONN){
+                k_work_reschedule(&restart_adv_work,K_MSEC(500));
+        }
 };
 void disconnected_cb(struct bt_conn *conn, uint8_t reason){
         char addr[BT_ADDR_LE_STR_LEN];
@@ -77,12 +76,11 @@ void disconnected_cb(struct bt_conn *conn, uint8_t reason){
                         return;
                 }
         }
-        // if(active_session.count < CONFIG_BT_MAX_CONN){
-        //         start_adv();
-        // }
+        if(active_session.count < CONFIG_BT_MAX_CONN){
+                k_work_reschedule(&restart_adv_work,K_MSEC(500));
+        }
 };
 void recycled_cb(void){
-        start_adv();
 };
 
 void start_adv_work_handler(struct k_work *work){
@@ -110,6 +108,7 @@ int init_gap(void){
                 LOG_INF("Success to register bt conn callbacks");
                 k_work_init(&start_adv_work, start_adv_work_handler);
                 k_work_init(&stop_adv_work, stop_adv_work_handler);
+                k_work_init_delayable(&restart_adv_work,start_adv_work_handler);
                 return ret;
     };
 }
