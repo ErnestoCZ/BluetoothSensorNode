@@ -9,8 +9,13 @@ if (DOXYGEN_FOUND)
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM)
 endif()
+# list(APPEND CMAKE_MODULE_PATH ${ZEPHYR_BASE}/modules/nanopb)
+# include(nanopb)
 
-project(nrf5340Playground)
+project(nrf5340Playground LANGUAGES C CXX ASM)
+# set(CMAKE_C_STANDARD 11)
+# set(CMAKE_C_STANDARD_REQUIRED ON)
+# set(CMAKE_C_EXTENSIONS ON)
 
 add_subdirectory(src/lib)
 target_sources(app PRIVATE src/main.c)

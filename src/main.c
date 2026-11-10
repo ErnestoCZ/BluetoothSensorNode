@@ -5,8 +5,11 @@
 #include "lib/gap.h"
 #include "lib/gpios.h"
 #include "lib/bme280_mod.h"
+#include <zephyr/zbus/zbus.h>
 
 LOG_MODULE_REGISTER(MAIN);
+
+//TODO ZBUS
 
 
 static void checkInitStatus(int error, const char* message){
