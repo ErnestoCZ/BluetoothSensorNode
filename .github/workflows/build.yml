@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NCS_VERSION: v3.4.2
+  BOARD: nrf5340dk/nrf5340/cpuapp/ns
+
+jobs:
+  compile:
+    name: compile
+    runs-on: ubuntu-24.04
+    # Official Nordic toolchain image; BASH_ENV in the image sets up the toolchain for bash steps
+    container: ghcr.io/nrfconnect/sdk-nrf-toolchain:v3.4.2
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: app
+
+      - name: Cache NCS workspace
+        id: ncs-cache
+        uses: actions/cache@v4
+        with:
+          path: ncs
+          key: ncs-${{ env.NCS_VERSION }}
+
+      - name: Set up NCS workspace
+        if: steps.ncs-cache.outputs.cache-hit != 'true'
+        run: |
+          west init -m https://github.com/nrfconnect/sdk-nrf --mr "$NCS_VERSION" ncs
+          cd ncs
+          west update --narrow -o=--depth=1
+
+      - name: Build firmware
+        working-directory: ncs
+        run: |
+          export ZEPHYR_BASE="$PWD/zephyr"
+          west build -p always -b "$BOARD" --sysbuild -d ../build ../app
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ github.sha }}
+          path: |
+            build/merged*.hex
+            build/app/zephyr/zephyr.hex
+            build/*/zephyr/zephyr.hex
+            build/*/zephyr/zephyr.elf
+          if-no-files-found: warn
