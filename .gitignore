@@ -2,3 +2,5 @@ build*/
 html/
 latex/
 **/*workspace
+# Secrets
+.env
